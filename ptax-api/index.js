@@ -4,20 +4,23 @@ const { create } = require('xmlbuilder2');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-function getDataAtualFormatoBCB() {
-    const hoje = new Date();
-    const dia = String(hoje.getDate()).padStart(2, '0');
-    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-    const ano = hoje.getFullYear();
+function getDataFormatoBCB(diasAntes = 0) {
+    const data = new Date();
+    data.setDate(data.getDate() - diasAntes);
+    const dia = String(data.getDate()).padStart(2, '0');
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const ano = data.getFullYear();
     return `${mes}-${dia}-${ano}`;
 }
 
 app.get('/ptax', async (req, res) => {
     try {
-        const hoje = getDataAtualFormatoBCB();
+        const ontem = getDataFormatoBCB(1);
+        const hoje = getDataFormatoBCB(0);
+
         const url = `https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/` +
             `CotacaoDolarPeriodo(dataInicial=@dataInicial,dataFinalCotacao=@dataFinalCotacao)` +
-            `?@dataInicial='${hoje}'&@dataFinalCotacao='${hoje}'` +
+            `?@dataInicial='${ontem}'&@dataFinalCotacao='${hoje}'` +
             `&$top=1&$orderby=dataHoraCotacao desc&$format=json&$select=cotacaoCompra,cotacaoVenda,dataHoraCotacao`;
 
         const response = await axios.get(url);
