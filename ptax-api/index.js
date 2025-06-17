@@ -4,6 +4,7 @@ const { create } = require('xmlbuilder2');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Função para gerar datas no formato MM-DD-YYYY exigido pelo Banco Central
 function getDataFormatoBCB(diasAntes = 0) {
     const data = new Date();
     data.setDate(data.getDate() - diasAntes);
@@ -11,6 +12,11 @@ function getDataFormatoBCB(diasAntes = 0) {
     const mes = String(data.getMonth() + 1).padStart(2, '0');
     const ano = data.getFullYear();
     return `${mes}-${dia}-${ano}`;
+}
+
+// Função para formatar valores para R$ com vírgula
+function formatarBRL(valor) {
+    return `R$ ${parseFloat(valor).toFixed(4).replace('.', ',')}`;
 }
 
 app.get('/ptax', async (req, res) => {
@@ -31,8 +37,8 @@ app.get('/ptax', async (req, res) => {
         const xml = create({ version: '1.0' })
             .ele('Cotacao')
                 .ele('DataHora').txt(data.dataHoraCotacao).up()
-                .ele('Compra').txt(data.cotacaoCompra).up()
-                .ele('Venda').txt(data.cotacaoVenda).up()
+                .ele('Compra').txt(formatarBRL(data.cotacaoCompra)).up()
+                .ele('Venda').txt(formatarBRL(data.cotacaoVenda)).up()
             .end({ prettyPrint: true });
 
         res.set('Content-Type', 'application/xml');
