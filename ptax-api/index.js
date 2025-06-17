@@ -4,11 +4,26 @@ const { create } = require('xmlbuilder2');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+function getDataAtualFormatoBCB() {
+    const hoje = new Date();
+    const dia = String(hoje.getDate()).padStart(2, '0');
+    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+    const ano = hoje.getFullYear();
+    return `${mes}-${dia}-${ano}`;
+}
+
 app.get('/ptax', async (req, res) => {
     try {
-        const url = 'https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/CotacaoDolarUltimoDia?%24format=json';
+        const hoje = getDataAtualFormatoBCB();
+        const url = `https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/` +
+            `CotacaoDolarPeriodo(dataInicial=@dataInicial,dataFinalCotacao=@dataFinalCotacao)` +
+            `?@dataInicial='${hoje}'&@dataFinalCotacao='${hoje}'` +
+            `&$top=1&$orderby=dataHoraCotacao desc&$format=json&$select=cotacaoCompra,cotacaoVenda,dataHoraCotacao`;
+
         const response = await axios.get(url);
         const data = response.data.value[0];
+
+        if (!data) return res.status(404).send("Dados não encontrados.");
 
         const xml = create({ version: '1.0' })
             .ele('Cotacao')
@@ -20,7 +35,8 @@ app.get('/ptax', async (req, res) => {
         res.set('Content-Type', 'application/xml');
         res.send(xml);
 
-    } catch {
+    } catch (err) {
+        console.error(err.message);
         res.status(500).send('Erro ao consultar dólar PTAX');
     }
 });
