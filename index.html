@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planejador de Rotas | Nexus Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-sA+4psp4Im1wFFtaDfGuk2ab+gkEeTTVtF52l7N3Peg="
+    crossorigin=""
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand__mark">N</span>
+        <div class="brand__text">
+          <h1>NexusAdmin</h1>
+          <p>Painel de Operações</p>
+        </div>
+      </div>
+      <nav class="menu">
+        <h2>Navegação</h2>
+        <a class="menu__item" href="#painel">Painel</a>
+        <a class="menu__item" href="#localidades">Localidades</a>
+        <a class="menu__item menu__item--active" href="#roteirizacao">Roteirização</a>
+        <a class="menu__item" href="#relatorios">Relatórios</a>
+      </nav>
+      <div class="sidebar__footer">
+        <p>© 2024 NexusAdmin</p>
+      </div>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div>
+          <p class="breadcrumb">Painel &gt; Ogea Transporte &gt; Roteirização</p>
+          <h2>Planeje rotas otimizadas com poucos cliques</h2>
+        </div>
+        <button class="btn btn--primary">+ Adicionar nova Rota</button>
+      </header>
+
+      <section class="planner" id="roteirizacao">
+        <div class="panel">
+          <header class="panel__header">
+            <h3>Configurações da rota</h3>
+            <p>Escolha a tipologia do veículo e preencha os dados para estimar o custo.</p>
+          </header>
+
+          <form class="form" id="route-form">
+            <div class="form__group">
+              <label for="origin">Origem</label>
+              <input type="text" id="origin" name="origin" placeholder="Cidade ou coordenada" required />
+            </div>
+            <div class="form__group">
+              <label for="destination">Destino</label>
+              <input type="text" id="destination" name="destination" placeholder="Cidade ou coordenada" required />
+            </div>
+            <div class="form__group">
+              <label for="distance">Distância (km)</label>
+              <input type="number" id="distance" name="distance" min="1" step="0.1" placeholder="Ex: 450" required />
+            </div>
+            <div class="form__group">
+              <label for="typology">Tipologia do Veículo</label>
+              <select id="typology" name="typology">
+                <option value="leve">Veículo leve</option>
+                <option value="toco">Toco</option>
+                <option value="truck">Truck</option>
+                <option value="carreta">Carreta</option>
+                <option value="bitrem">Bitrem</option>
+              </select>
+            </div>
+            <div class="form__group">
+              <label for="toll">Total de Pedágios (R$)</label>
+              <input type="number" id="toll" name="toll" min="0" step="0.01" placeholder="Ex: 125.50" />
+            </div>
+            <div class="form__group">
+              <label for="fuelPrice">Preço do combustível (R$/L)</label>
+              <input type="number" id="fuelPrice" name="fuelPrice" min="0" step="0.01" placeholder="Ex: 5.89" />
+            </div>
+            <div class="form__group">
+              <label for="consumption">Consumo médio (km/L)</label>
+              <input type="number" id="consumption" name="consumption" min="1" step="0.1" placeholder="Ex: 3.2" />
+            </div>
+            <div class="form__group">
+              <label for="rate">Tarifa por km (R$)</label>
+              <input type="number" id="rate" name="rate" min="0" step="0.01" placeholder="Ex: 5.10" />
+            </div>
+            <button class="btn btn--accent" type="submit">Calcular Frete</button>
+          </form>
+        </div>
+
+        <div class="panel panel--map">
+          <header class="panel__header">
+            <h3>Mapa Interativo</h3>
+            <p>Visualize pontos de origem e destino diretamente no mapa.</p>
+          </header>
+          <div id="map"></div>
+        </div>
+      </section>
+
+      <section class="results" id="painel">
+        <div class="panel">
+          <header class="panel__header">
+            <h3>Resumo da simulação</h3>
+            <p>Consolide os custos e compartilhe com a equipe.</p>
+          </header>
+          <div id="summary" class="summary">
+            <p>Preencha o formulário para visualizar o resumo do frete.</p>
+          </div>
+        </div>
+
+        <div class="panel" id="localidades">
+          <header class="panel__header">
+            <h3>Localidades cadastradas</h3>
+            <p>Principais bases operacionais e pontos de parada.</p>
+          </header>
+          <ul class="locations">
+            <li>
+              <h4>São Paulo - SP</h4>
+              <p>Base principal da operação Sudeste.</p>
+            </li>
+            <li>
+              <h4>Curitiba - PR</h4>
+              <p>Ponto estratégico para rotas Sul/Sudeste.</p>
+            </li>
+            <li>
+              <h4>Goiânia - GO</h4>
+              <p>Hub de distribuição Centro-Oeste.</p>
+            </li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-o9N1j7kGStb7Jj8q+1j6kS4FkfKxQbmEcDk30+4b5Jk="
+    crossorigin=""
+  ></script>
+  <script src="script.js"></script>
+</body>
+</html>
