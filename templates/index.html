@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IA com Memória</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; padding: 0 12px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+    #chat { height: 360px; overflow-y: auto; background: #fafafa; }
+    .msg { margin: 8px 0; padding: 8px; border-radius: 8px; white-space: pre-wrap; }
+    .user { background: #dff2ff; }
+    .bot { background: #f0f0f0; }
+    .row { display: flex; gap: 8px; }
+    input[type="text"] { flex: 1; padding: 10px; }
+    button { padding: 10px 12px; cursor: pointer; }
+    #status { font-size: 14px; color: #555; }
+  </style>
+</head>
+<body>
+  <h1>IA simples com memória</h1>
+  <p>Ela só responde com base no que você escreve e no conteúdo dos arquivos enviados.</p>
+
+  <div class="card" id="chat"></div>
+
+  <div class="card">
+    <div class="row">
+      <input id="message" type="text" placeholder="Digite sua mensagem..." />
+      <button id="send">Enviar</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Enviar arquivo de texto</h3>
+    <div class="row">
+      <input id="file" type="file" />
+      <button id="upload">Enviar arquivo</button>
+      <button id="clear">Limpar memória</button>
+    </div>
+  </div>
+
+  <p id="status">Memórias salvas: 0</p>
+
+  <script>
+    const chat = document.getElementById('chat');
+    const messageInput = document.getElementById('message');
+    const status = document.getElementById('status');
+
+    function addMessage(text, cls) {
+      const div = document.createElement('div');
+      div.className = `msg ${cls}`;
+      div.textContent = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function updateStats(stats) {
+      if (!stats) return;
+      status.textContent = `Memórias salvas: ${stats.total}`;
+    }
+
+    async function sendMessage() {
+      const text = messageInput.value.trim();
+      if (!text) return;
+
+      addMessage(`Você: ${text}`, 'user');
+      messageInput.value = '';
+
+      const response = await fetch('/api/message', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: text})
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        addMessage(`Erro: ${data.error || 'Falha ao enviar mensagem.'}`, 'bot');
+        return;
+      }
+
+      addMessage(`IA: ${data.reply}`, 'bot');
+      updateStats(data.stats);
+    }
+
+    async function uploadFile() {
+      const fileInput = document.getElementById('file');
+      const file = fileInput.files[0];
+      if (!file) {
+        addMessage('Erro: selecione um arquivo.', 'bot');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        addMessage(`Erro upload: ${data.error || 'Falha no envio.'}`, 'bot');
+        return;
+      }
+
+      addMessage(`IA: ${data.message}`, 'bot');
+      updateStats(data.stats);
+      fileInput.value = '';
+    }
+
+    async function clearMemory() {
+      const response = await fetch('/api/clear', { method: 'POST' });
+      const data = await response.json();
+      addMessage(`IA: ${data.message}`, 'bot');
+      updateStats(data.stats);
+    }
+
+    document.getElementById('send').addEventListener('click', sendMessage);
+    messageInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') sendMessage();
+    });
+    document.getElementById('upload').addEventListener('click', uploadFile);
+    document.getElementById('clear').addEventListener('click', clearMemory);
+
+    addMessage('IA: Olá! Me ensine com mensagens ou arquivos de texto.', 'bot');
+  </script>
+</body>
+</html>
